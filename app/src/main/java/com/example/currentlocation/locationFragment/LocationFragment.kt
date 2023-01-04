@@ -14,7 +14,6 @@ import androidx.fragment.app.Fragment
 import com.example.currentlocation.MapsActivity
 import com.example.currentlocation.R
 import com.example.currentlocation.databinding.FragmentLocationBinding
-import com.example.currentlocation.model.RouteX
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -24,7 +23,6 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.gms.maps.model.PolylineOptions
-import com.google.maps.android.PolyUtil
 import javax.inject.Inject
 
 
@@ -103,14 +101,19 @@ class LocationFragment : Fragment(), OnMapReadyCallback {
                                 lastKnownLocation!!.latitude,
                                 lastKnownLocation!!.longitude
                             )
-                            map?.addMarker(MarkerOptions().position(myPosition).title("my"))
                             map?.addMarker(
-                                MarkerOptions().position(defaultLocation).title("default")
-                            )
+                                MarkerOptions()
+                                    .position(myPosition)
+                                    .title("my"))
+                            map?.addMarker(
+                                MarkerOptions()
+                                    .position(defaultLocation)
+                                    .title("default"))
                             map?.moveCamera(CameraUpdateFactory.newLatLngZoom(myPosition, 14.5f))
+
                             viewModel.getData(myPosition, defaultLocation)
                             viewModel.data.observe(this) {
-                                makeRoute(it.routes)
+                                makeRoute(it)
                             }
                         }
                     } else {
@@ -129,17 +132,14 @@ class LocationFragment : Fragment(), OnMapReadyCallback {
         }
     }
 
-    private fun makeRoute(routes: List<RouteX>) {
-        routes.forEach { route ->
-            route.legs.forEach { leg ->
-                leg.steps.forEach { step ->
-                    map?.addPolyline(
-                        PolylineOptions().addAll(PolyUtil.decode(step.polyline.points))
-                            .color(Color.RED)
-                    )
-                }
-            }
+    private fun makeRoute(list: List<List<LatLng>>) {
+        list.forEach {
+            map?.addPolyline(
+                PolylineOptions().addAll(it)
+                    .color(Color.RED)
+            )
         }
+
     }
 
 

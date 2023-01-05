@@ -21,8 +21,8 @@ class GeoViewModel @Inject constructor(
 
     fun getData(origin: LatLng, destination: LatLng) {
         remoteDataSource.getRoute(origin, destination)
-            .observeOn(Schedulers.io())
-            .subscribeOn(AndroidSchedulers.mainThread())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribeOn(Schedulers.io())
             .subscribe(
                 {
                     getSteps(it.routes)

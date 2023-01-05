@@ -1,7 +1,6 @@
 package com.example.currentlocation.locationFragment
 
 import android.annotation.SuppressLint
-import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.location.Location
@@ -10,8 +9,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.fragment.app.Fragment
-import com.example.currentlocation.MapsActivity
+import com.example.currentlocation.BaseFragment
 import com.example.currentlocation.R
 import com.example.currentlocation.databinding.FragmentLocationBinding
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -23,19 +21,16 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.gms.maps.model.PolylineOptions
-import javax.inject.Inject
 
 
-class LocationFragment : Fragment(), OnMapReadyCallback {
+class LocationFragment : BaseFragment(), OnMapReadyCallback {
+
+    private lateinit var binding: FragmentLocationBinding
     private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
     private var map: GoogleMap? = null
     private val defaultLocation = LatLng(50.2716, 30.3125)
-    private var locationPermissionGranted = false
     private var lastKnownLocation: Location? = null
-    private lateinit var binding: FragmentLocationBinding
-
-    @Inject
-    lateinit var viewModel: GeoViewModel
+    private var locationPermissionGranted = false
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -46,10 +41,6 @@ class LocationFragment : Fragment(), OnMapReadyCallback {
         return binding.root
     }
 
-    override fun onAttach(context: Context) {
-        super.onAttach(context)
-        (activity as MapsActivity).locationComponent.inject(this)
-    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -59,6 +50,49 @@ class LocationFragment : Fragment(), OnMapReadyCallback {
         val mapFragment =
             childFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
+
+        viewModel.data.observe(viewLifecycleOwner) {
+            if (it.isNotEmpty()) {
+                makeRoute(it)
+            }
+        }
+
+    }
+
+    private fun setDefaultPositionMarker() {
+        map?.addMarker(
+            MarkerOptions()
+                .position(defaultLocation).title("default")
+        )
+    }
+
+    private fun setMyPositionMarker(position: LatLng) {
+        map?.moveCamera(CameraUpdateFactory.newLatLngZoom(position, 14.5f))
+        map?.addMarker(
+            MarkerOptions()
+                .position(position)
+                .title("my")
+        )
+    }
+
+    @Deprecated("Deprecated in Java")
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String>,
+        grantResults: IntArray
+    ) {
+        locationPermissionGranted = false
+        when (requestCode) {
+            100 -> {
+                if (grantResults.isNotEmpty() &&
+                    grantResults[0] == PackageManager.PERMISSION_GRANTED
+                ) {
+                    locationPermissionGranted = true
+                }
+            }
+            else -> super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        }
+        updateLocationUI()
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
@@ -101,28 +135,14 @@ class LocationFragment : Fragment(), OnMapReadyCallback {
                                 lastKnownLocation!!.latitude,
                                 lastKnownLocation!!.longitude
                             )
-                            map?.addMarker(
-                                MarkerOptions()
-                                    .position(myPosition)
-                                    .title("my"))
-                            map?.addMarker(
-                                MarkerOptions()
-                                    .position(defaultLocation)
-                                    .title("default"))
-                            map?.moveCamera(CameraUpdateFactory.newLatLngZoom(myPosition, 14.5f))
+                            setMyPositionMarker(myPosition)
+                            setDefaultPositionMarker()
 
                             viewModel.getData(myPosition, defaultLocation)
-                            viewModel.data.observe(this) {
-                                makeRoute(it)
-                            }
                         }
                     } else {
-                        Log.d("DataRoute", "Current location is null. Using defaults.")
                         Log.e("DataRoute", "Exception: %s", task.exception)
-                        map?.addMarker(
-                            MarkerOptions()
-                                .position(defaultLocation).title("default")
-                        )
+                        setDefaultPositionMarker()
                         map?.uiSettings?.isMyLocationButtonEnabled = false
                     }
                 }
@@ -141,27 +161,5 @@ class LocationFragment : Fragment(), OnMapReadyCallback {
         }
 
     }
-
-
-    @Deprecated("Deprecated in Java")
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<String>,
-        grantResults: IntArray
-    ) {
-        locationPermissionGranted = false
-        when (requestCode) {
-            100 -> {
-                if (grantResults.isNotEmpty() &&
-                    grantResults[0] == PackageManager.PERMISSION_GRANTED
-                ) {
-                    locationPermissionGranted = true
-                }
-            }
-            else -> super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        }
-        updateLocationUI()
-    }
-
 
 }

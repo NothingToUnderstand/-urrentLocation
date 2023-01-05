@@ -1,7 +1,7 @@
 package com.example.currentlocation.di
 
-import com.example.currentlocation.MapsActivity
-import com.example.currentlocation.locationFragment.LocationFragment
+import com.example.currentlocation.BaseActivity
+import com.example.currentlocation.BaseFragment
 import dagger.Subcomponent
 import javax.inject.Scope
 
@@ -13,8 +13,8 @@ interface LocationComponent {
         fun create(): LocationComponent
     }
 
-    fun inject(activity: MapsActivity)
-    fun inject(fragment: LocationFragment)
+    fun inject(activity: BaseActivity)
+    fun inject(fragment: BaseFragment)
 }
 
 @Scope

@@ -6,13 +6,11 @@ import io.reactivex.rxjava3.core.Single
 import retrofit2.http.GET
 import retrofit2.http.Query
 
-const val API_KEY = BuildConfig.MAPS_API_KEY
 
 interface DirectionsService {
     @GET("json")
     fun getRoute(
         @Query("origin") myLocation: String,
-        @Query("destination") destination: String,
-        @Query("key") apikey: String = API_KEY
+        @Query("destination") destination: String
     ): Single<Route>
 }

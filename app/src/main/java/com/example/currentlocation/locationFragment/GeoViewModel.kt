@@ -1,5 +1,6 @@
 package com.example.currentlocation.locationFragment
 
+import android.annotation.SuppressLint
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -19,6 +20,7 @@ class GeoViewModel @Inject constructor(
 
     val data = MutableLiveData<List<List<LatLng>>>()
 
+    @SuppressLint("CheckResult")
     fun getData(origin: LatLng, destination: LatLng) {
         remoteDataSource.getRoute(origin, destination)
             .observeOn(AndroidSchedulers.mainThread())
